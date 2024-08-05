@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Verse Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #output, #referenceOutput, #parameters {
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .toggle-container {
+            margin-top: 20px;
+        }
+        .range-input {
+            margin-bottom: 10px;
+        }
+        #rangeInputs {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Random Verse Selector</h1>
+    <label for="nameInput">Name:</label>
+    <input type="text" id="nameInput" placeholder="Enter your name">
+    <br><br>
+    <label for="dateInput">Date:</label>
+    <input type="date" id="dateInput">
+    <br><br>
+
+    <div id="rangeInputs">
+        <div class="range-input">
+            <label>Range 1:</label>
+            <select class="startSeries">
+                <option value="0">Series 0</option>
+                <option value="1">Series 1</option>
+                <option value="2">Series 2</option>
+                <option value="3">Series 3</option>
+                <option value="4">Series 4</option>
+                <option value="5">Series 5</option>
+            </select>
+            <select class="startSection">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+            </select>
+            <input type="number" class="startNumber" min="0" max="12" value="1">
+            <label>to</label>
+            <select class="endSeries">
+                <option value="0">Series 0</option>
+                <option value="1">Series 1</option>
+                <option value="2">Series 2</option>
+                <option value="3">Series 3</option>
+                <option value="4">Series 4</option>
+                <option value="5">Series 5</option>
+            </select>
+            <select class="endSection">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+            </select>
+            <input type="number" class="endNumber" min="0" max="12" value="12">
+        </div>
+    </div>
+
+    <button onclick="addRange()">Add Range</button>
+    <button onclick="removeRange()">Remove Range</button>
+    <br><br>
+    <button onclick="selectVerses()">Select Verses</button>
+
+    <div class="toggle-container hidden">
+        <label for="displayToggle">Display Mode:</label>
+        <select id="displayToggle" onchange="toggleDisplay()">
+            <option value="reference">Reference Only</option>
+            <option value="full">Full Information</option>
+        </select>
+        <label for="languageToggle">Language:</label>
+        <select id="languageToggle" onchange="toggleLanguage()">
+            <option value="en">English</option>
+            <option value="zh">Chinese</option>
+        </select>
+    </div>
+
+    <div id="parameters" class="hidden"></div>
+    <div id="output" class="hidden"></div>
+    <div id="referenceOutput" class="hidden"></div>
+    <div id="downloadContainer" class="hidden">
+        <button onclick="downloadResults()">Download Results</button>
+    </div>
+
+    <script>
+        const verses = [
+            // Series 0
+            {series: 0, section: 'A', number: 1, topic: 'Christ the Center', reference: '2 Cor 5:17', topicZh: '基督是中心', referenceZh: '哥林多後書 5:17'},
+            {series: 0, section: 'A', number: 2, topic: 'Christ the Center', reference: 'Gal 2:20', topicZh: '基督是中心', referenceZh: '加拉太書 2:20'},
+            {series: 0, section: 'A', number: 3, topic: 'Obedience to Christ', reference: 'Rom 12:1', topicZh: '順服基督', referenceZh: '羅馬書 12:1'},
+            {series: 0, section: 'A', number: 4, topic: 'Obedience to Christ', reference: 'John 14:21', topicZh: '順服基督', referenceZh: '約翰福音 14:21'},
+            {series: 0, section: 'A', number: 5, topic: 'The Word', reference: '2 Tim 3:16', topicZh: '神的話', referenceZh: '提摩太後書 3:16'},
+            {series: 0, section: 'A', number: 6, topic: 'The Word', reference: 'Josh 1:8', topicZh: '神的話', referenceZh: '約書亞記 1:8'},
+            {series: 0, section: 'A', number: 7, topic: 'Prayer', reference: 'John 15:7', topicZh: '禱告', referenceZh: '約翰福音 15:7'},
+            {series: 0, section: 'A', number: 8, topic: 'Prayer', reference: 'Phil 4:6-7', topicZh: '禱告', referenceZh: '腓立比書 4:6-7'},
+            {series: 0, section: 'A', number: 9, topic: 'Fellowship', reference: 'Matt 18:20', topicZh: '交通', referenceZh: '馬太福音 18:20'},
+            {series: 0, section: 'A', number: 10, topic: 'Fellowship', reference: 'Heb 10:24-25', topicZh: '交通', referenceZh: '希伯來書 10:24-25'},
+            {series: 0, section: 'A', number: 11, topic: 'Witnessing', reference: 'Matt 4:19', topicZh: '見證', referenceZh: '馬太福音 4:19'},
+            {series: 0, section: 'A', number: 12, topic: 'Witnessing', reference: 'Rom 1:16', topicZh: '見證', referenceZh: '羅馬書 1:16'},
+
+            {series: 0, section: 'B', number: 1, topic: 'All Have Sinned', reference: 'Rom 3:23', topicZh: '人人有罪', referenceZh: '羅馬書 3:23'},
+            {series: 0, section: 'B', number: 2, topic: 'All Have Sinned', reference: 'Isa 53:6', topicZh: '人人有罪', referenceZh: '以賽亞書 53:6'},
+            {series: 0, section: 'B', number: 3, topic: "Sin's Penalty", reference: 'Rom 6:23', topicZh: '罪的刑罰', referenceZh: '羅馬書 6:23'},
+            {series: 0, section: 'B', number: 4, topic: "Sin's Penalty", reference: 'Heb 9:27', topicZh: '罪的刑罰', referenceZh: '希伯來書 9:27'},
+            {series: 0, section: 'B', number: 5, topic: 'Christ Paid the Penalty', reference: 'Rom 5:8', topicZh: '基督代付贖價', referenceZh: '羅馬書 5:8'},
+            {series: 0, section: 'B', number: 6, topic: 'Christ Paid the Penalty', reference: '1 Pet 3:18', topicZh: '基督代付贖價', referenceZh: '彼得前書 3:18'},
+            {series: 0, section: 'B', number: 7, topic: 'Salvation is not by Works', reference: 'Eph 2:8-9', topicZh: '救恩不在行為', referenceZh: '以弗所書 2:8-9'},
+            {series: 0, section: 'B', number: 8, topic: 'Salvation is not by Works', reference: 'Titus 3:5', topicZh: '救恩不在行為', referenceZh: '提多書 3:5'},
+            {series: 0, section: 'B', number: 9, topic: 'Must Receive Christ', reference: 'John 1:12', topicZh: '必須接受基督', referenceZh: '約翰福音 1:12'},
+            {series: 0, section: 'B', number: 10, topic: 'Must Receive Christ', reference: 'Rev 3:20', topicZh: '必須接受基督', referenceZh: '啟示錄 3:20'},
+            {series: 0, section: 'B', number: 11, topic: 'Assurance of Salvation', reference: '1 John 5:13', topicZh: '得救的確據', referenceZh: '約翰一書 5:13'},
+            {series: 0, section: 'B', number: 12, topic: 'Assurance of Salvation', reference: 'John 5:24', topicZh: '得救的確據', referenceZh: '約翰福音 5:24'},
+
+            {series: 0, section: 'C', number: 1, topic: 'His Spirit', reference: '1 Cor 3:16', topicZh: '祂的靈', referenceZh: '哥林多前書 3:16'},
+            {series: 0, section: 'C', number: 2, topic: 'His Spirit', reference: '1 Cor 2:12', topicZh: '祂的靈', referenceZh: '哥林多前書 2:12'},
+            {series: 0, section: 'C', number: 3, topic: 'His Strength', reference: 'Isa 41:10', topicZh: '祂的力量', referenceZh: '以賽亞書 41:10'},
+            {series: 0, section: 'C', number: 4, topic: 'His Strength', reference: 'Phil 4:13', topicZh: '祂的力量', referenceZh: '腓立比書 4:13'},
+            {series: 0, section: 'C', number: 5, topic: 'His Faithfulness', reference: 'Lam 3:22-23', topicZh: '祂的信實', referenceZh: '耶利米哀歌 3:22-23'},
+            {series: 0, section: 'C', number: 6, topic: 'His Faithfulness', reference: 'Num 23:19', topicZh: '祂的信實', referenceZh: '民數記 23:19'},
+            {series: 0, section: 'C', number: 7, topic: 'His Peace', reference: 'Isa 26:3', topicZh: '祂的平安', referenceZh: '以賽亞書 26:3'},
+            {series: 0, section: 'C', number: 8, topic: 'His Peace', reference: '1 Pet 5:7', topicZh: '祂的平安', referenceZh: '彼得前書 5:7'},
+            {series: 0, section: 'C', number: 9, topic: 'His Provision', reference: 'Rom 8:32', topicZh: '祂的賜給', referenceZh: '羅馬書 8:32'},
+            {series: 0, section: 'C', number: 10, topic: 'His Provision', reference: 'Phil 4:19', topicZh: '祂的賜給', referenceZh: '腓立比書 4:19'},
+            {series: 0, section: 'C', number: 11, topic: 'His Help in Temptation', reference: 'Heb 2:18', topicZh: '祂在試探中的幫助', referenceZh: '希伯來書 2:18'},
+            {series: 0, section: 'C', number: 12, topic: 'His Help in Temptation', reference: 'Ps 119:9,11', topicZh: '祂在試探中的幫助', referenceZh: '詩篇 119:9,11'},
+            
+            {series: 0, section: 'D', number: 1, topic: 'Put Christ First', reference: 'Matt 6:33', topicZh: '以基督為首', referenceZh: '馬太福音 6:33'},
+            {series: 0, section: 'D', number: 2, topic: 'Put Christ First', reference: 'Luke 9:23', topicZh: '以基督為首', referenceZh: '路加福音 9:23'},
+            {series: 0, section: 'D', number: 3, topic: 'Separate From the World', reference: '1 John 2:15-16', topicZh: '從世界分別出來', referenceZh: '約翰一書 2:15-16'},
+            {series: 0, section: 'D', number: 4, topic: 'Separate From the World', reference: 'Rom 12:2', topicZh: '從世界分別出來', referenceZh: '羅馬書 12:2'},
+            {series: 0, section: 'D', number: 5, topic: 'Be Steadfast', reference: '1 Cor 15:58', topicZh: '堅定不移', referenceZh: '哥林多前書 15:58'},
+            {series: 0, section: 'D', number: 6, topic: 'Be Steadfast', reference: 'Heb 12:3', topicZh: '堅定不移', referenceZh: '希伯來書 12:3'},
+            {series: 0, section: 'D', number: 7, topic: 'Serve Others', reference: 'Mark 10:45', topicZh: '要服事他人', referenceZh: '馬可福音 10:45'},
+            {series: 0, section: 'D', number: 8, topic: 'Serve Others', reference: '2 Cor 4:5', topicZh: '要服事他人', referenceZh: '哥林多後書 4:5'},
+            {series: 0, section: 'D', number: 9, topic: 'Give Generously', reference: 'Prov 3:9-10', topicZh: '慷慨的捐助', referenceZh: '箴言 3:9-10'},
+            {series: 0, section: 'D', number: 10, topic: 'Give Generously', reference: '2 Cor 9:6-7', topicZh: '慷慨的捐助', referenceZh: '哥林多後書 9:6-7'},
+            {series: 0, section: 'D', number: 11, topic: 'Develop World Vision', reference: 'Acts 1:8', topicZh: '福音要傳遍世界', referenceZh: '使徒行傳 1:8'},
+            {series: 0, section: 'D', number: 12, topic: 'Develop World Vision', reference: 'Matt 28:19-20', topicZh: '福音要傳遍世界', referenceZh: '馬太福音 28:19-20'},
+            
+            {series: 0, section: 'E', number: 1, topic: 'Love', reference: 'John 13:34-35', topicZh: '愛心', referenceZh: '約翰福音 13:34-35'},
+            {series: 0, section: 'E', number: 2, topic: 'Love', reference: '1 John 3:18', topicZh: '愛心', referenceZh: '約翰一書 3:18'},
+            {series: 0, section: 'E', number: 3, topic: 'Humility', reference: 'Phil 2:3-4', topicZh: '謙卑', referenceZh: '腓立比書 2:3-4'},
+            {series: 0, section: 'E', number: 4, topic: 'Humility', reference: '1 Pet 5:5-6', topicZh: '謙卑', referenceZh: '彼得前書 5:5-6'},
+            {series: 0, section: 'E', number: 5, topic: 'Purity', reference: 'Eph 5:3', topicZh: '聖潔', referenceZh: '以弗所書 5:3'},
+            {series: 0, section: 'E', number: 6, topic: 'Purity', reference: '1 Pet 2:11', topicZh: '聖潔', referenceZh: '彼得前書 2:11'},
+            {series: 0, section: 'E', number: 7, topic: 'Honesty', reference: 'Lev 19:11', topicZh: '誠實', referenceZh: '利未記 19:11'},
+            {series: 0, section: 'E', number: 8, topic: 'Honesty', reference: 'Acts 24:16', topicZh: '誠實', referenceZh: '使徒行傳 24:16'},
+            {series: 0, section: 'E', number: 9, topic: 'Faith', reference: 'Heb 11:6', topicZh: '信心', referenceZh: '希伯來書 11:6'},
+            {series: 0, section: 'E', number: 10, topic: 'Faith', reference: 'Rom 4:20-21', topicZh: '信心', referenceZh: '羅馬書 4:20-21'},
+            {series: 0, section: 'E', number: 11, topic: 'Good Works', reference: 'Gal 6:9-10', topicZh: '善行', referenceZh: '加拉太書 6:9-10'},
+            {series: 0, section: 'E', number: 12, topic: 'Good Works', reference: 'Matt 5:16', topicZh: '善行', referenceZh: '馬太福音 5:16'},
+            
+            // Series 1
+            // Section A
+            {series: 1, section: 'A', number: 1, topic: "Jesus' Deity", reference: 'John 1:1,14', topicZh: '耶穌的神性', referenceZh: '約翰福音 1:1,14'},
+            {series: 1, section: 'A', number: 2, topic: "Jesus' Deity", reference: 'Heb 1:8', topicZh: '耶穌的神性', referenceZh: '希伯來書 1:8'},
+            {series: 1, section: 'A', number: 3, topic: "Jesus' Humanity", reference: 'Heb 4:15', topicZh: '耶穌的人性', referenceZh: '希伯來書 4:15'},
+            {series: 1, section: 'A', number: 4, topic: "Jesus' Humanity", reference: 'Luke 2:52', topicZh: '耶穌的人性', referenceZh: '路加福音 2:52'},
+            {series: 1, section: 'A', number: 5, topic: "Jesus' Resurrection", reference: '1 Cor 15:3-4', topicZh: '耶穌死裡復活', referenceZh: '哥林多前書 15:3-4'},
+            {series: 1, section: 'A', number: 6, topic: "Jesus' Resurrection", reference: '1 Cor 15:20', topicZh: '耶穌死裡復活', referenceZh: '哥林多前書 15:20'},
+            {series: 1, section: 'A', number: 7, topic: 'Jesus Reveals God', reference: 'John 1:18', topicZh: '耶穌彰顯父神', referenceZh: '約翰福音 1:18'},
+            {series: 1, section: 'A', number: 8, topic: 'Jesus Reveals God', reference: 'Heb 1:3', topicZh: '耶穌彰顯父神', referenceZh: '希伯來書 1:3'},
+            {series: 1, section: 'A', number: 9, topic: 'Jesus as Redeemer', reference: 'Luke 19:10', topicZh: '耶穌是救贖主', referenceZh: '路加福音 19:10'},
+            {series: 1, section: 'A', number: 10, topic: 'Jesus as Redeemer', reference: '1 Pet 1:18-19', topicZh: '耶穌是救贖主', referenceZh: '彼得前書 1:18-19'},
+            {series: 1, section: 'A', number: 11, topic: "Jesus' Return", reference: '1 Thess 4:16-17', topicZh: '耶穌必要再來', referenceZh: '帖撒羅尼迦前書 4:16-17'},
+            {series: 1, section: 'A', number: 12, topic: "Jesus' Return", reference: '1 John 3:2-3', topicZh: '耶穌必要再來', referenceZh: '約翰一書 3:2-3'},
+
+            // Section B
+            {series: 1, section: 'B', number: 1, topic: 'Holy Spirit Testifies', reference: 'John 16:13-14', topicZh: '聖靈印證真理', referenceZh: '約翰福音 16:13-14'},
+            {series: 1, section: 'B', number: 2, topic: 'Holy Spirit Testifies', reference: '1 Cor 12:3', topicZh: '聖靈印證真理', referenceZh: '哥林多前書 12:3'},
+            {series: 1, section: 'B', number: 3, topic: 'Holy Spirit Indwells', reference: 'Rom 8:9', topicZh: '聖靈住在心裡', referenceZh: '羅馬書 8:9'},
+            {series: 1, section: 'B', number: 4, topic: 'Holy Spirit Indwells', reference: 'Gal 4:6', topicZh: '聖靈住在心裡', referenceZh: '加拉太書 4:6'},
+            {series: 1, section: 'B', number: 5, topic: 'Holy Spirit Controls', reference: 'Eph 5:18', topicZh: '聖靈管理一切', referenceZh: '以弗所書 5:18'},
+            {series: 1, section: 'B', number: 6, topic: 'Holy Spirit Controls', reference: 'Gal 5:16', topicZh: '聖靈管理一切', referenceZh: '加拉太書 5:16'},
+            {series: 1, section: 'B', number: 7, topic: 'Holy Spirit Reveals', reference: '1 Cor 2:9-10', topicZh: '聖靈參透萬事', referenceZh: '哥林多前書 2:9-10'},
+            {series: 1, section: 'B', number: 8, topic: 'Holy Spirit Reveals', reference: 'John 14:26', topicZh: '聖靈參透萬事', referenceZh: '約翰福音 14:26'},
+            {series: 1, section: 'B', number: 9, topic: 'Holy Spirit Empowers', reference: '1 Cor 2:4-5', topicZh: '聖靈賦予能力', referenceZh: '哥林多前書 2:4-5'},
+            {series: 1, section: 'B', number: 10, topic: 'Holy Spirit Empowers', reference: '1 Thess 1:5', topicZh: '聖靈賦予能力', referenceZh: '帖撒羅尼迦前書 1:5'},
+            {series: 1, section: 'B', number: 11, topic: 'Holy Spirit Gives Gifts', reference: '1 Cor 12:11', topicZh: '聖靈賜下恩賜', referenceZh: '哥林多前書 12:11'},
+            {series: 1, section: 'B', number: 12, topic: 'Holy Spirit Gives Gifts', reference: '1 Cor 12:4-6', topicZh: '聖靈賜下恩賜', referenceZh: '哥林多前書 12:4-6'},
+
+            // Section C
+            {series: 1, section: 'C', number: 1, topic: "God's Power", reference: 'Jer 32:17', topicZh: '神的能力', referenceZh: '耶利米書 32:17'},
+            {series: 1, section: 'C', number: 2, topic: "God's Knowledge", reference: 'Rom 11:33', topicZh: '神的智慧', referenceZh: '羅馬書 11:33'},
+            {series: 1, section: 'C', number: 3, topic: "God's Presence", reference: 'Jer 23:24', topicZh: '神的存在', referenceZh: '耶利米書 23:24'},
+            {series: 1, section: 'C', number: 4, topic: "God's Grace", reference: '2 Cor 9:8', topicZh: '神的恩惠', referenceZh: '哥林多後書 9:8'},
+            {series: 1, section: 'C', number: 5, topic: "God's Glory", reference: '1 Chron 29:11-13', topicZh: '神的榮耀', referenceZh: '歷代志上 29:11-13'},
+            {series: 1, section: 'C', number: 6, topic: "God's Faithfulness", reference: '2 Thess 3:3', topicZh: '神的信實', referenceZh: '帖撒羅尼迦後書 3:3'},
+            {series: 1, section: 'C', number: 7, topic: 'God is Spirit', reference: 'John 4:24', topicZh: '神是個靈', referenceZh: '約翰福音 4:24'},
+            {series: 1, section: 'C', number: 8, topic: "God's Holiness", reference: '1 Pet 1:15-16', topicZh: '神的聖潔', referenceZh: '彼得前書 1:15-16'},
+            {series: 1, section: 'C', number: 9, topic: "God's Greatness", reference: 'Ps 145:3', topicZh: '神的偉大', referenceZh: '詩篇 145:3'},
+            {series: 1, section: 'C', number: 10, topic: "God's Love", reference: '1 John 4:10', topicZh: '神的愛', referenceZh: '約翰一書 4:10'},
+            {series: 1, section: 'C', number: 11, topic: "God's Mercy", reference: 'Ps 86:15', topicZh: '神的憐憫', referenceZh: '詩篇 86:15'},
+            {series: 1, section: 'C', number: 12, topic: "God's Sovereignty", reference: 'Rom 8:28', topicZh: '神的公義', referenceZh: '羅馬書 8:28'},
+            
+            // Series 2
+            // Section A
+            {series: 2, section: 'A', number: 1, topic: 'Tell the Truth', reference: 'Eph 4:15', topicZh: '言語誠實', referenceZh: '以弗所書 4:15'},
+            {series: 2, section: 'A', number: 2, topic: 'Tell the Truth', reference: 'Col 3:9', topicZh: '言語誠實', referenceZh: '歌羅西書 3:9'},
+            {series: 2, section: 'A', number: 3, topic: 'Avoid Gossip', reference: 'Prov 17:9', topicZh: '避免閒言', referenceZh: '箴言 17:9'},
+            {series: 2, section: 'A', number: 4, topic: 'Avoid Gossip', reference: 'Prov 11:13', topicZh: '避免閒言', referenceZh: '箴言 11:13'},
+            {series: 2, section: 'A', number: 5, topic: 'Speak Graciously', reference: 'Col 4:5-6', topicZh: '回答柔和', referenceZh: '歌羅西書 4:5-6'},
+            {series: 2, section: 'A', number: 6, topic: 'Speak Graciously', reference: 'Prov 15:1', topicZh: '回答柔和', referenceZh: '箴言 15:1'},
+            {series: 2, section: 'A', number: 7, topic: 'Admit Sin', reference: 'James 5:16', topicZh: '彼此認罪', referenceZh: '雅各書 5:16'},
+            {series: 2, section: 'A', number: 8, topic: 'Admit Sin', reference: 'Matt 5:23-24', topicZh: '彼此認罪', referenceZh: '馬太福音 5:23-24'},
+            {series: 2, section: 'A', number: 9, topic: 'Listen', reference: 'James 1:19', topicZh: '聆聽對方', referenceZh: '雅各書 1:19'},
+            {series: 2, section: 'A', number: 10, topic: 'Listen', reference: 'Prov 18:13', topicZh: '聆聽對方', referenceZh: '箴言 18:13'},
+            {series: 2, section: 'A', number: 11, topic: 'Accept Reproof', reference: 'Prov 9:8-9', topicZh: '接受責備', referenceZh: '箴言 9:8-9'},
+            {series: 2, section: 'A', number: 12, topic: 'Accept Reproof', reference: 'Matt 18:15', topicZh: '接受責備', referenceZh: '馬太福音 18:15'},
+
+            // Section B
+            {series: 2, section: 'B', number: 1, topic: 'Forgive Others', reference: 'Eph 4:32', topicZh: '饒恕別人', referenceZh: '以弗所書 4:32'},
+            {series: 2, section: 'B', number: 2, topic: 'Forgive Others', reference: 'Col 3:13', topicZh: '饒恕別人', referenceZh: '歌羅西書 3:13'},
+            {series: 2, section: 'B', number: 3, topic: 'Be Patient', reference: 'Eph 4:2', topicZh: '存心忍耐', referenceZh: '以弗所書 4:2'},
+            {series: 2, section: 'B', number: 4, topic: 'Be Patient', reference: '2 Tim 2:24-25', topicZh: '存心忍耐', referenceZh: '提摩太後書 2:24-25'},
+            {series: 2, section: 'B', number: 5, topic: 'Control Anger', reference: 'Eph 4:26', topicZh: '控制脾氣', referenceZh: '以弗所書 4:26'},
+            {series: 2, section: 'B', number: 6, topic: 'Control Anger', reference: 'Col 3:8', topicZh: '控制脾氣', referenceZh: '歌羅西書 3:8'},
+            {series: 2, section: 'B', number: 7, topic: 'Overcome Bitterness', reference: 'Heb 12:15', topicZh: '除去苦毒', referenceZh: '希伯來書 12:15'},
+            {series: 2, section: 'B', number: 8, topic: 'Overcome Bitterness', reference: 'Eph 4:31', topicZh: '除去苦毒', referenceZh: '以弗所書 4:31'},
+            {series: 2, section: 'B', number: 9, topic: 'Endure Injustice', reference: '1 Pet 2:20-21', topicZh: '忍受冤屈', referenceZh: '彼得前書 2:20-21'},
+            {series: 2, section: 'B', number: 10, topic: 'Endure Injustice', reference: 'Rom 12:19', topicZh: '忍受冤屈', referenceZh: '羅馬書 12:19'},
+            {series: 2, section: 'B', number: 11, topic: 'Avoid Jealousy', reference: 'Prov 27:4', topicZh: '避免紛爭', referenceZh: '箴言 27:4'},
+            {series: 2, section: 'B', number: 12, topic: 'Avoid Jealousy', reference: 'James 3:16', topicZh: '避免紛爭', referenceZh: '雅各書 3:16'},
+
+            // Section C
+            {series: 2, section: 'C', number: 1, topic: 'Live in Harmony', reference: 'Rom 15:5-6', topicZh: '彼此相合', referenceZh: '羅馬書 15:5-6'},
+            {series: 2, section: 'C', number: 2, topic: 'Live in Harmony', reference: '1 Cor 1:10', topicZh: '彼此相合', referenceZh: '哥林多前書 1:10'},
+            {series: 2, section: 'C', number: 3, topic: 'Serve Others', reference: 'Matt 20:26-27', topicZh: '互相服事', referenceZh: '馬太福音 20:26-27'},
+            {series: 2, section: 'C', number: 4, topic: 'Serve Others', reference: 'Gal 5:13', topicZh: '互相服事', referenceZh: '加拉太書 5:13'},
+            {series: 2, section: 'C', number: 5, topic: 'Put Others First', reference: 'Rom 15:2', topicZh: '彼此尊重', referenceZh: '羅馬書 15:2'},
+            {series: 2, section: 'C', number: 6, topic: 'Put Others First', reference: 'Phil 2:3-4', topicZh: '彼此尊重', referenceZh: '腓立比書 2:3-4'},
+            {series: 2, section: 'C', number: 7, topic: 'Encourage One Another', reference: '1 Thess 5:11', topicZh: '互相建立', referenceZh: '帖撒羅尼迦前書 5:11'},
+            {series: 2, section: 'C', number: 8, topic: 'Encourage One Another', reference: 'Eccl 4:9-10', topicZh: '互相建立', referenceZh: '傳道書 4:9-10'},
+            {series: 2, section: 'C', number: 9, topic: 'Be Compassionate', reference: 'Matt 9:36', topicZh: '心存憐憫', referenceZh: '馬太福音 9:36'},
+            {series: 2, section: 'C', number: 10, topic: 'Be Compassionate', reference: 'Rom 12:15', topicZh: '心存憐憫', referenceZh: '羅馬書 12:15'},
+            {series: 2, section: 'C', number: 11, topic: 'Be Gentle', reference: 'James 3:17', topicZh: '舉止溫柔', referenceZh: '雅各書 3:17'},
+            {series: 2, section: 'C', number: 12, topic: 'Be Gentle', reference: 'Gal 6:1', topicZh: '舉止溫柔', referenceZh: '加拉太書 6:1'},
+            
+            // Series 3
+            // Section A
+            {series: 3, section: 'A', number: 1, topic: 'Importance of Promises', reference: '2 Pet 1:3-4', topicZh: '應許之重要', referenceZh: '彼得後書 1:3-4'},
+            {series: 3, section: 'A', number: 2, topic: 'Importance of Promises', reference: '2 Cor 1:20', topicZh: '應許之重要', referenceZh: '哥林多後書 1:20'},
+            {series: 3, section: 'A', number: 3, topic: 'Promises for Ministry', reference: '2 Cor 1:3-4', topicZh: '事奉之應許', referenceZh: '哥林多後書 1:3-4'},
+            {series: 3, section: 'A', number: 4, topic: 'Promises for Ministry', reference: '1 Cor 3:7-8', topicZh: '事奉之應許', referenceZh: '哥林多前書 3:7-8'},
+            {series: 3, section: 'A', number: 5, topic: 'Promises for Fulfilled Life', reference: 'Ps 1:2-3', topicZh: '應許結果子', referenceZh: '詩篇 1:2-3'},
+            {series: 3, section: 'A', number: 6, topic: 'Promises for Fulfilled Life', reference: '2 Pet 1:8', topicZh: '應許結果子', referenceZh: '彼得後書 1:8'},
+            {series: 3, section: 'A', number: 7, topic: 'Promises for Help in Trouble', reference: '1 Pet 5:10', topicZh: '應許得力量', referenceZh: '彼得前書 5:10'},
+            {series: 3, section: 'A', number: 8, topic: 'Promises for Help in Trouble', reference: '2 Cor 12:9', topicZh: '應許得力量', referenceZh: '哥林多後書 12:9'},
+            {series: 3, section: 'A', number: 9, topic: 'Promises for Provision', reference: 'Eph 1:3', topicZh: '應許得賜給', referenceZh: '以弗所書 1:3'},
+            {series: 3, section: 'A', number: 10, topic: 'Promises for Provision', reference: 'Ps 37:4-6', topicZh: '應許得賜給', referenceZh: '詩篇 37:4-6'},
+            {series: 3, section: 'A', number: 11, topic: 'Promises for Forgiveness', reference: '1 John 2:1-2', topicZh: '應許罪得贖', referenceZh: '約翰一書 2:1-2'},
+            {series: 3, section: 'A', number: 12, topic: 'Promises for Forgiveness', reference: 'Ps 103:12', topicZh: '應許罪得贖', referenceZh: '詩篇 103:12'},
+
+            // Section B
+            {series: 3, section: 'B', number: 1, topic: 'Power', reference: 'Heb 4:12', topicZh: '大有功效', referenceZh: '希伯來書 4:12'},
+            {series: 3, section: 'B', number: 2, topic: 'Power', reference: 'Isa 55:10-11', topicZh: '大有功效', referenceZh: '以賽亞書 55:10-11'},
+            {series: 3, section: 'B', number: 3, topic: 'Inspiration', reference: '2 Pet 1:20-21', topicZh: '啟示人', referenceZh: '彼得後書 1:20-21'},
+            {series: 3, section: 'B', number: 4, topic: 'Inspiration', reference: '1 Thess 2:13', topicZh: '啟示人', referenceZh: '帖撒羅尼迦前書 2:13'},
+            {series: 3, section: 'B', number: 5, topic: 'Nourishment', reference: 'Jer 15:16', topicZh: '滋養', referenceZh: '耶利米書 15:16'},
+            {series: 3, section: 'B', number: 6, topic: 'Nourishment', reference: 'Job 23:12', topicZh: '滋養', referenceZh: '約伯記 23:12'},
+            {series: 3, section: 'B', number: 7, topic: 'Know', reference: 'Acts 17:11', topicZh: '查考', referenceZh: '使徒行傳 17:11'},
+            {series: 3, section: 'B', number: 8, topic: 'Know', reference: 'Ps 119:125', topicZh: '查考', referenceZh: '詩篇 119:125'},
+            {series: 3, section: 'B', number: 9, topic: 'Obey', reference: 'John 8:31-32', topicZh: '遵行', referenceZh: '約翰福音 8:31-32'},
+            {series: 3, section: 'B', number: 10, topic: 'Obey', reference: 'Matt 4:4', topicZh: '遵行', referenceZh: '馬太福音 4:4'},
+            {series: 3, section: 'B', number: 11, topic: 'Reliability', reference: 'Matt 24:35', topicZh: '可信', referenceZh: '馬太福音 24:35'},
+            {series: 3, section: 'B', number: 12, topic: 'Reliability', reference: 'John 17:17', topicZh: '可信', referenceZh: '約翰福音 17:17'},
+
+            // Section C
+            {series: 3, section: 'C', number: 1, topic: 'Testing of Faith', reference: '1 Pet 1:6-7', topicZh: '信心的試驗', referenceZh: '彼得前書 1:6-7'},
+            {series: 3, section: 'C', number: 2, topic: 'Testing of Faith', reference: 'James 1:2-4', topicZh: '信心的試驗', referenceZh: '雅各書 1:2-4'},
+            {series: 3, section: 'C', number: 3, topic: 'Results of Unbelief', reference: 'Heb 4:2', topicZh: '不信的結果', referenceZh: '希伯來書 4:2'},
+            {series: 3, section: 'C', number: 4, topic: 'Results of Unbelief', reference: 'Heb 10:38', topicZh: '不信的結果', referenceZh: '希伯來書 10:38'},
+            {series: 3, section: 'C', number: 5, topic: 'The Battle of Faith', reference: 'Eph 6:16', topicZh: '用信心爭戰', referenceZh: '以弗所書 6:16'},
+            {series: 3, section: 'C', number: 6, topic: 'The Battle of Faith', reference: '1 Tim 6:11-12', topicZh: '用信心爭戰', referenceZh: '提摩太前書 6:11-12'},
+            {series: 3, section: 'C', number: 7, topic: 'Source of Faith', reference: 'Heb 11:1', topicZh: '信心的來源', referenceZh: '希伯來書 11:1'},
+            {series: 3, section: 'C', number: 8, topic: 'Source of Faith', reference: 'Rom 10:17', topicZh: '信心的來源', referenceZh: '羅馬書 10:17'},
+            {series: 3, section: 'C', number: 9, topic: 'Faith in Action', reference: 'Heb 6:12', topicZh: '憑信心而行', referenceZh: '希伯來書 6:12'},
+            {series: 3, section: 'C', number: 10, topic: 'Faith in Action', reference: 'James 2:17', topicZh: '憑信心而行', referenceZh: '雅各書 2:17'},
+            {series: 3, section: 'C', number: 11, topic: 'Justification by Faith', reference: 'Gal 2:16', topicZh: '因信稱義', referenceZh: '加拉太書 2:16'},
+            {series: 3, section: 'C', number: 12, topic: 'Justification by Faith', reference: 'Rom 5:1', topicZh: '因信稱義', referenceZh: '羅馬書 5:1'},
+            
+            // Series 4
+            // Section A
+            {series: 4, section: 'A', number: 1, topic: 'Victory in Christ', reference: '1 Cor 15:57', topicZh: '主裡得勝', referenceZh: '哥林多前書 15:57'},
+            {series: 4, section: 'A', number: 2, topic: 'Victory in Christ', reference: '2 Cor 2:14', topicZh: '主裡得勝', referenceZh: '哥林多後書 2:14'},
+            {series: 4, section: 'A', number: 3, topic: 'Weapons for Victory', reference: '2 Cor 10:4-5', topicZh: '勝之武器', referenceZh: '哥林多後書 10:4-5'},
+            {series: 4, section: 'A', number: 4, topic: 'Weapons for Victory', reference: 'Eph 6:10-11', topicZh: '勝之武器', referenceZh: '以弗所書 6:10-11'},
+            {series: 4, section: 'A', number: 5, topic: 'Overcoming the Devil', reference: 'Rev 12:11', topicZh: '戰勝魔鬼', referenceZh: '啟示錄 12:11'},
+            {series: 4, section: 'A', number: 6, topic: 'Overcoming the Devil', reference: 'James 4:7-8', topicZh: '戰勝魔鬼', referenceZh: '雅各書 4:7-8'},
+            {series: 4, section: 'A', number: 7, topic: 'Overcoming the Flesh', reference: 'Rom 8:5-6', topicZh: '勝過肉體', referenceZh: '羅馬書 8:5-6'},
+            {series: 4, section: 'A', number: 8, topic: 'Overcoming the Flesh', reference: 'Rom 13:14', topicZh: '勝過肉體', referenceZh: '羅馬書 13:14'},
+            {series: 4, section: 'A', number: 9, topic: 'Overcoming the World', reference: '1 John 4:4', topicZh: '勝過世界', referenceZh: '約翰一書 4:4'},
+            {series: 4, section: 'A', number: 10, topic: 'Overcoming the World', reference: '1 John 5:4-5', topicZh: '勝過世界', referenceZh: '約翰一書 5:4-5'},
+            {series: 4, section: 'A', number: 11, topic: 'Overcoming Sin', reference: 'Ps 37:31', topicZh: '勝過罪惡', referenceZh: '詩篇 37:31'},
+            {series: 4, section: 'A', number: 12, topic: 'Overcoming Sin', reference: 'Rom 6:12-13', topicZh: '勝過罪惡', referenceZh: '羅馬書 6:12-13'},
+
+            // Section B
+            {series: 4, section: 'B', number: 1, topic: 'Thought', reference: 'Phil 4:8', topicZh: '思想聖潔', referenceZh: '腓立比書 4:8'},
+            {series: 4, section: 'B', number: 2, topic: 'Thought', reference: 'Titus 1:15', topicZh: '思想聖潔', referenceZh: '提多書 1:15'},
+            {series: 4, section: 'B', number: 3, topic: 'Heart', reference: 'Luke 6:45', topicZh: '內心聖潔', referenceZh: '路加福音 6:45'},
+            {series: 4, section: 'B', number: 4, topic: 'Heart', reference: 'Prov 4:23', topicZh: '內心聖潔', referenceZh: '箴言 4:23'},
+            {series: 4, section: 'B', number: 5, topic: 'Sight', reference: 'Matt 6:22', topicZh: '目光聖潔', referenceZh: '馬太福音 6:22'},
+            {series: 4, section: 'B', number: 6, topic: 'Sight', reference: 'Matt 5:28', topicZh: '目光聖潔', referenceZh: '馬太福音 5:28'},
+            {series: 4, section: 'B', number: 7, topic: 'Body', reference: '1 Thess 4:3', topicZh: '肉體聖潔', referenceZh: '帖撒羅尼迦前書 4:3'},
+            {series: 4, section: 'B', number: 8, topic: 'Body', reference: '1 Cor 6:13', topicZh: '肉體聖潔', referenceZh: '哥林多前書 6:13'},
+            {series: 4, section: 'B', number: 9, topic: 'Speech', reference: 'Eph 4:29', topicZh: '言語聖潔', referenceZh: '以弗所書 4:29'},
+            {series: 4, section: 'B', number: 10, topic: 'Speech', reference: 'Matt 12:36-37', topicZh: '言語聖潔', referenceZh: '馬太福音 12:36-37'},
+            {series: 4, section: 'B', number: 11, topic: 'Actions', reference: '1 Thess 5:22', topicZh: '行為聖潔', referenceZh: '帖撒羅尼迦前書 5:22'},
+            {series: 4, section: 'B', number: 12, topic: 'Actions', reference: '1 Tim 5:1-2', topicZh: '行為聖潔', referenceZh: '提摩太前書 5:1-2'},
+
+            // Section C
+            {series: 4, section: 'C', number: 1, topic: 'Ask', reference: 'Matt 21:22', topicZh: '憑信心求', referenceZh: '馬太福音 21:22'},
+            {series: 4, section: 'C', number: 2, topic: 'Ask', reference: 'Matt 7:7-8', topicZh: '憑信心求', referenceZh: '馬太福音 7:7-8'},
+            {series: 4, section: 'C', number: 3, topic: 'Praying Alone', reference: 'Matt 6:6', topicZh: '暗自禱告', referenceZh: '馬太福音 6:6'},
+            {series: 4, section: 'C', number: 4, topic: 'Praying Alone', reference: 'Mark 1:35', topicZh: '暗自禱告', referenceZh: '馬可福音 1:35'},
+            {series: 4, section: 'C', number: 5, topic: "God's Answer", reference: 'Jer 33:3', topicZh: '必蒙垂聽', referenceZh: '耶利米書 33:3'},
+            {series: 4, section: 'C', number: 6, topic: "God's Answer", reference: 'Eph 3:20-21', topicZh: '必蒙垂聽', referenceZh: '以弗所書 3:20-21'},
+            {series: 4, section: 'C', number: 7, topic: 'Pray in His Will', reference: '1 John 5:14-15', topicZh: '按神旨意求', referenceZh: '約翰一書 5:14-15'},
+            {series: 4, section: 'C', number: 8, topic: 'Pray in His Will', reference: '1 Thess 5:17-18', topicZh: '按神旨意求', referenceZh: '帖撒羅尼迦前書 5:17-18'},
+            {series: 4, section: 'C', number: 9, topic: 'Intercessory Prayer', reference: '1 Sam 12:23', topicZh: '彼此代禱', referenceZh: '撒母耳記上 12:23'},
+            {series: 4, section: 'C', number: 10, topic: 'Intercessory Prayer', reference: 'Matt 9:37-38', topicZh: '彼此代禱', referenceZh: '馬太福音 9:37-38'},
+            {series: 4, section: 'C', number: 11, topic: 'Praise', reference: 'Heb 13:15', topicZh: '讚美', referenceZh: '希伯來書 13:15'},
+            {series: 4, section: 'C', number: 12, topic: 'Praise', reference: 'Ps 146:1-2', topicZh: '讚美', referenceZh: '詩篇 146:1-2'},
+            
+            // Series 5
+            // Section A
+            {series: 5, section: 'A', number: 1, topic: 'Reaching All Men', reference: 'Col 1:27-28', topicZh: '傳給萬民', referenceZh: '歌羅西書 1:27-28'},
+            {series: 5, section: 'A', number: 2, topic: 'Representing God', reference: '2 Cor 5:19-20', topicZh: '神的託付', referenceZh: '哥林多後書 5:19-20'},
+            {series: 5, section: 'A', number: 3, topic: 'Pleasing God', reference: '1 Thess 2:4', topicZh: '討神喜悅', referenceZh: '帖撒羅尼迦前書 2:4'},
+            {series: 5, section: 'A', number: 4, topic: 'Serving All Men', reference: '1 Cor 9:19', topicZh: '服務眾人', referenceZh: '哥林多前書 9:19'},
+            {series: 5, section: 'A', number: 5, topic: 'Seeing Opportunities', reference: 'John 4:35', topicZh: '莊稼熟了', referenceZh: '約翰福音 4:35'},
+            {series: 5, section: 'A', number: 6, topic: 'Sharing Your Life', reference: '1 Thess 2:8', topicZh: '分享生命', referenceZh: '帖撒羅尼迦前書 2:8'},
+            {series: 5, section: 'A', number: 7, topic: 'Sin a Reality', reference: 'Rom 3:10-12', topicZh: '罪的真實', referenceZh: '羅馬書 3:10-12'},
+            {series: 5, section: 'A', number: 8, topic: 'Consequences of Sin', reference: '2 Thess 1:8-9', topicZh: '罪的結果', referenceZh: '帖撒羅尼迦後書 1:8-9'},
+            {series: 5, section: 'A', number: 9, topic: 'Christ Paid the Price', reference: '1 Pet 2:24', topicZh: '基督贖罪', referenceZh: '彼得前書 2:24'},
+            {series: 5, section: 'A', number: 10, topic: 'Salvation a Free Gift', reference: '2 Tim 1:9', topicZh: '救贖人類', referenceZh: '提摩太後書 1:9'},
+            {series: 5, section: 'A', number: 11, topic: 'Believe and Receive Him', reference: 'Rom 10:9-10', topicZh: '相信基督', referenceZh: '羅馬書 10:9-10'},
+            {series: 5, section: 'A', number: 12, topic: 'Assurance of Salvation', reference: 'John 10:28-30', topicZh: '得救確據', referenceZh: '約翰福音 10:28-30'},
+
+            // Section B
+            {series: 5, section: 'B', number: 1, topic: "I'm Not So Bad", reference: 'Prov 21:2', topicZh: '我並沒有罪', referenceZh: '箴言 21:2'},
+            {series: 5, section: 'B', number: 2, topic: 'Too Much to Give Up', reference: 'Mark 8:36', topicZh: '捨棄太多了', referenceZh: '馬可福音 8:36'},
+            {series: 5, section: 'B', number: 3, topic: "I Can't Understand", reference: 'John 7:17', topicZh: '福音是真理嗎', referenceZh: '約翰福音 7:17'},
+            {series: 5, section: 'B', number: 4, topic: "I'm Not Good Enough Yet", reference: 'Luke 5:31-32', topicZh: '我還不夠好', referenceZh: '路加福音 5:31-32'},
+            {series: 5, section: 'B', number: 5, topic: 'What Will People Think?', reference: 'John 5:44', topicZh: '別人會笑我', referenceZh: '約翰福音 5:44'},
+            {series: 5, section: 'B', number: 6, topic: "I Can't Hold Out", reference: 'Heb 7:25', topicZh: '我無法堅信', referenceZh: '希伯來書 7:25'},
+            {series: 5, section: 'B', number: 7, topic: "I'll Wait Till Later", reference: 'Prov 27:1', topicZh: '以後再信吧', referenceZh: '箴言 27:1'},
+            {series: 5, section: 'B', number: 8, topic: 'Too Many Hypocrites', reference: 'Rom 14:12', topicZh: '基督徒一樣糟', referenceZh: '羅馬書 14:12'},
+            {series: 5, section: 'B', number: 9, topic: "I Don't Believe in Christ", reference: 'Acts 4:12', topicZh: '耶穌是救主嗎', referenceZh: '使徒行傳 4:12'},
+            {series: 5, section: 'B', number: 10, topic: 'What About Other Religions?', reference: 'Prov 14:12', topicZh: '其他宗教呢', referenceZh: '箴言 14:12'},
+            {series: 5, section: 'B', number: 11, topic: "God Won't Send Anyone to Hell", reference: 'Matt 25:41', topicZh: '沒有審判的', referenceZh: '馬太福音 25:41'},
+            {series: 5, section: 'B', number: 12, topic: 'What About the Heathen?', reference: 'Rom 1:20', topicZh: '真的有神嗎', referenceZh: '羅馬書 1:20'},
+
+            // Section C
+            {series: 5, section: 'C', number: 1, topic: 'Redeemed', reference: '1 Pet 1:18-19', topicZh: '罪中贖回', referenceZh: '彼得前書 1:18-19'},
+            {series: 5, section: 'C', number: 2, topic: 'Reconciled', reference: '2 Cor 5:18', topicZh: '與神和好', referenceZh: '哥林多後書 5:18'},
+            {series: 5, section: 'C', number: 3, topic: 'Forgiven', reference: 'Eph 1:7', topicZh: '罪得赦免', referenceZh: '以弗所書 1:7'},
+            {series: 5, section: 'C', number: 4, topic: 'Free From the Law', reference: 'Rom 6:14-15', topicZh: '脫離律法', referenceZh: '羅馬書 6:14-15'},
+            {series: 5, section: 'C', number: 5, topic: 'Born of God', reference: 'Gal 3:26', topicZh: '從神而生', referenceZh: '加拉太書 3:26'},
+            {series: 5, section: 'C', number: 6, topic: 'Made Priest', reference: '1 Pet 2:9', topicZh: '神的選民', referenceZh: '彼得前書 2:9'},
+            {series: 5, section: 'C', number: 7, topic: 'Made Righteous', reference: '2 Cor 5:21', topicZh: '主裡稱義', referenceZh: '哥林多後書 5:21'},
+            {series: 5, section: 'C', number: 8, topic: 'Sanctified', reference: '1 Cor 1:30', topicZh: '成為聖潔', referenceZh: '哥林多前書 1:30'},
+            {series: 5, section: 'C', number: 9, topic: 'Perfected', reference: 'Heb 10:14', topicZh: '成為完全', referenceZh: '希伯來書 10:14'},
+            {series: 5, section: 'C', number: 10, topic: 'Justified', reference: 'Rom 3:24', topicZh: '成為公義', referenceZh: '羅馬書 3:24'},
+            {series: 5, section: 'C', number: 11, topic: 'Made Heavenly Citizens', reference: 'Phil 3:20', topicZh: '等候救主', referenceZh: '腓立比書 3:20'},
+            {series: 5, section: 'C', number: 12, topic: 'Made Complete', reference: 'Col 2:9-10', topicZh: '豐盛生命', referenceZh: '歌羅西書 2:9-10'},
+        ];
+
+        let selectedVerses = [];
+        let parameters = {};
+        let currentLanguage = 'en';
+
+        function addRange() {
+            const rangeInputs = document.getElementById('rangeInputs');
+            const newRange = document.createElement('div');
+            newRange.className = 'range-input';
+            newRange.innerHTML = `
+                <label>Range ${rangeInputs.children.length + 1}:</label>
+                <select class="startSeries">
+                    <option value="0">Series 0</option>
+                    <option value="1">Series 1</option>
+                    <option value="2">Series 2</option>
+                    <option value="3">Series 3</option>
+                    <option value="4">Series 4</option>
+                    <option value="5">Series 5</option>
+                </select>
+                <select class="startSection">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="E">E</option>
+                </select>
+                <input type="number" class="startNumber" min="0" max="12" value="1">
+                <label>to</label>
+                <select class="endSeries">
+                    <option value="0">Series 0</option>
+                    <option value="1">Series 1</option>
+                    <option value="2">Series 2</option>
+                    <option value="3">Series 3</option>
+                    <option value="4">Series 4</option>
+                    <option value="5">Series 5</option>
+                </select>
+                <select class="endSection">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="E">E</option>
+                </select>
+                <input type="number" class="endNumber" min="0" max="12" value="12">
+            `;
+            rangeInputs.appendChild(newRange);
+        }
+
+        function removeRange() {
+            const rangeInputs = document.getElementById('rangeInputs');
+            if (rangeInputs.children.length > 1) {
+                rangeInputs.removeChild(rangeInputs.lastChild);
+            }
+        }
+
+        function selectVerses() {
+            parameters.name = document.getElementById('nameInput').value;
+            parameters.date = document.getElementById('dateInput').value;
+            parameters.ranges = [];
+
+            const rangeInputs = document.querySelectorAll('.range-input');
+            rangeInputs.forEach(range => {
+                parameters.ranges.push({
+                    startSeries: range.querySelector('.startSeries').value,
+                    startSection: range.querySelector('.startSection').value,
+                    startNumber: range.querySelector('.startNumber').value,
+                    endSeries: range.querySelector('.endSeries').value,
+                    endSection: range.querySelector('.endSection').value,
+                    endNumber: range.querySelector('.endNumber').value
+                });
+            });
+
+            const filteredVerses = verses.filter(verse => {
+                return parameters.ranges.some(range => {
+                    if (verse.series < range.startSeries || verse.series > range.endSeries) return false;
+                    if (verse.series == range.startSeries && verse.section < range.startSection) return false;
+                    if (verse.series == range.startSeries && verse.section == range.startSection && verse.number < range.startNumber) return false;
+                    if (verse.series == range.endSeries && verse.section > range.endSection) return false;
+                    if (verse.series == range.endSeries && verse.section == range.endSection && verse.number > range.endNumber) return false;
+                    return true;
+                });
+            });
+
+            selectedVerses = [];
+            while (selectedVerses.length < 15 && filteredVerses.length > 0) {
+                const randomIndex = Math.floor(Math.random() * filteredVerses.length);
+                selectedVerses.push(filteredVerses.splice(randomIndex, 1)[0]);
+            }
+
+            displayResults();
+        }
+
+        function displayResults() {
+            const parametersDiv = document.getElementById('parameters');
+            const output = document.getElementById('output');
+            const referenceOutput = document.getElementById('referenceOutput');
+            
+            parametersDiv.innerHTML = `<h2>Parameters:</h2>
+                <p>Name: ${parameters.name}</p>
+                <p>Date: ${parameters.date}</p>
+                <p>Ranges:</p>
+                <ul>
+                    ${parameters.ranges.map((range, index) => `
+                        <li>Range ${index + 1}: Series ${range.startSeries} ${range.startSection}${range.startNumber} to Series ${range.endSeries} ${range.endSection}${range.endNumber}</li>
+                    `).join('')}
+                </ul>`;
+            
+            updateVerseDisplay();
+
+            document.querySelector('.toggle-container').classList.remove('hidden');
+            parametersDiv.classList.remove('hidden');
+            output.classList.add('hidden');
+            referenceOutput.classList.remove('hidden');
+            document.getElementById('downloadContainer').classList.remove('hidden');
+        }
+
+        function updateVerseDisplay() {
+            const output = document.getElementById('output');
+            const referenceOutput = document.getElementById('referenceOutput');
+            
+            output.innerHTML = '<h2>Selected Verses:</h2>';
+            referenceOutput.innerHTML = '<h2>Selected Verses (References Only):</h2>';
+            
+            selectedVerses.forEach((verse, index) => {
+                const topic = currentLanguage === 'en' ? verse.topic : (verse.topicZh || verse.topic);
+                const reference = currentLanguage === 'en' ? verse.reference : (verse.referenceZh || verse.reference);
+                output.innerHTML += `<p>${index + 1}. Series ${verse.series} ${verse.section}${verse.number} ${topic} - ${reference}</p>`;
+                referenceOutput.innerHTML += `<p>${index + 1}. ${reference}</p>`;
+            });
+        }
+
+        function toggleDisplay() {
+            const displayMode = document.getElementById('displayToggle').value;
+            const output = document.getElementById('output');
+            const referenceOutput = document.getElementById('referenceOutput');
+
+            if (displayMode === 'full') {
+                output.classList.remove('hidden');
+                referenceOutput.classList.add('hidden');
+            } else {
+                output.classList.add('hidden');
+                referenceOutput.classList.remove('hidden');
+            }
+        }
+
+        function toggleLanguage() {
+            currentLanguage = document.getElementById('languageToggle').value;
+            updateVerseDisplay();
+        }
+
+        function downloadResults() {
+            const content = `Selected Verses for ${parameters.name} - ${parameters.date}
+
+Parameters:
+Name: ${parameters.name}
+Date: ${parameters.date}
+Ranges:
+${parameters.ranges.map((range, index) => `Range ${index + 1}: Series ${range.startSeries} ${range.startSection}${range.startNumber} to Series ${range.endSeries} ${range.endSection}${range.endNumber}`).join('\n')}
+
+Selected Verses (${currentLanguage === 'en' ? 'English' : 'Chinese'}):
+${selectedVerses.map((verse, index) => {
+    const topic = currentLanguage === 'en' ? verse.topic : (verse.topicZh || verse.topic);
+    const reference = currentLanguage === 'en' ? verse.reference : (verse.referenceZh || verse.reference);
+    return `${index + 1}. Series ${verse.series} ${verse.section}${verse.number} ${topic} - ${reference}`;
+}).join('\n')}
+
+References Only (${currentLanguage === 'en' ? 'English' : 'Chinese'}):
+${selectedVerses.map((verse, index) => `${index + 1}. ${currentLanguage === 'en' ? verse.reference : (verse.referenceZh || verse.reference)}`).join('\n')}`;
+
+            const blob = new Blob([content], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const formattedDate = parameters.date.replace(/-/g, '');
+            a.download = `selected_verses_${parameters.name.replace(/\s+/g, '_')}_${formattedDate}_${currentLanguage}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
