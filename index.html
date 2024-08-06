@@ -79,6 +79,11 @@
     <button onclick="addRange()">Add Range</button>
     <button onclick="removeRange()">Remove Range</button>
     <br><br>
+    <label>
+        <input type="checkbox" id="includeAssurances">
+        Include 5 Assurances
+    </label>
+    <br><br>
     <button onclick="selectVerses()">Select Verses</button>
 
     <div class="toggle-container hidden">
@@ -385,6 +390,14 @@
             {series: 5, section: 'C', number: 12, topic: 'Made Complete', reference: 'Col 2:9-10', topicZh: '豐盛生命', referenceZh: '歌羅西書 2:9-10'},
         ];
 
+        const assurances = [
+            {topic: 'Assurance of Salvation', reference: '1 John 5:11-12', topicZh: '得救的確據', referenceZh: '約翰一書 5:11-12'},
+            {topic: 'Assurance of Answered Prayer', reference: 'John 16:24', topicZh: '禱告蒙應允的確據', referenceZh: '約翰福音 16:24'},
+            {topic: 'Assurance of Victory', reference: '1 Cor 10:13', topicZh: '得勝的確據', referenceZh: '哥林多前書 10:13'},
+            {topic: 'Assurance of Forgiveness', reference: '1 John 1:9', topicZh: '罪得赦免的確據', referenceZh: '約翰一書 1:9'},
+            {topic: 'Assurance of Guidance', reference: 'Prov 3:5-6', topicZh: '人生蒙引導的確據', referenceZh: '箴言 3:5-6'}
+        ];
+
         let selectedVerses = [];
         let parameters = {};
         let currentLanguage = 'en';
@@ -443,6 +456,7 @@
             parameters.name = document.getElementById('nameInput').value;
             parameters.date = document.getElementById('dateInput').value;
             parameters.ranges = [];
+            parameters.includeAssurances = document.getElementById('includeAssurances').checked;
 
             const rangeInputs = document.querySelectorAll('.range-input');
             rangeInputs.forEach(range => {
@@ -467,6 +481,10 @@
                 });
             });
 
+            if (parameters.includeAssurances) {
+                filteredVerses.push(...assurances);
+            }
+
             selectedVerses = [];
             while (selectedVerses.length < 15 && filteredVerses.length > 0) {
                 const randomIndex = Math.floor(Math.random() * filteredVerses.length);
@@ -489,7 +507,8 @@
                     ${parameters.ranges.map((range, index) => `
                         <li>Range ${index + 1}: Series ${range.startSeries} ${range.startSection}${range.startNumber} to Series ${range.endSeries} ${range.endSection}${range.endNumber}</li>
                     `).join('')}
-                </ul>`;
+                </ul>
+                <p>Include 5 Assurances: ${parameters.includeAssurances ? 'Yes' : 'No'}</p>`;
             
             updateVerseDisplay();
 
@@ -510,7 +529,7 @@
             selectedVerses.forEach((verse, index) => {
                 const topic = currentLanguage === 'en' ? verse.topic : (verse.topicZh || verse.topic);
                 const reference = currentLanguage === 'en' ? verse.reference : (verse.referenceZh || verse.reference);
-                output.innerHTML += `<p>${index + 1}. Series ${verse.series} ${verse.section}${verse.number} ${topic} - ${reference}</p>`;
+                output.innerHTML += `<p>${index + 1}. ${verse.series !== undefined ? `Series ${verse.series} ${verse.section}${verse.number} ` : ''}${topic} - ${reference}</p>`;
                 referenceOutput.innerHTML += `<p>${index + 1}. ${reference}</p>`;
             });
         }
@@ -542,12 +561,13 @@ Name: ${parameters.name}
 Date: ${parameters.date}
 Ranges:
 ${parameters.ranges.map((range, index) => `Range ${index + 1}: Series ${range.startSeries} ${range.startSection}${range.startNumber} to Series ${range.endSeries} ${range.endSection}${range.endNumber}`).join('\n')}
+Include 5 Assurances: ${parameters.includeAssurances ? 'Yes' : 'No'}
 
 Selected Verses (${currentLanguage === 'en' ? 'English' : 'Chinese'}):
 ${selectedVerses.map((verse, index) => {
     const topic = currentLanguage === 'en' ? verse.topic : (verse.topicZh || verse.topic);
     const reference = currentLanguage === 'en' ? verse.reference : (verse.referenceZh || verse.reference);
-    return `${index + 1}. Series ${verse.series} ${verse.section}${verse.number} ${topic} - ${reference}`;
+    return `${index + 1}. ${verse.series !== undefined ? `Series ${verse.series} ${verse.section}${verse.number} ` : ''}${topic} - ${reference}`;
 }).join('\n')}
 
 References Only (${currentLanguage === 'en' ? 'English' : 'Chinese'}):
